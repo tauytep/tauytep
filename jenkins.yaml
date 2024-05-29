@@ -1,0 +1,237 @@
+jenkins:
+  agentProtocols:
+  - "JNLP4-connect"
+  - "Ping"
+  authorizationStrategy:
+    roleBased:
+      roles:
+        global:
+        - entries:
+          - user: "admin"
+          - user: "devops"
+          name: "admin"
+          pattern: ".*"
+          permissions:
+          - "Overall/Administer"
+        - name: "developer"
+          pattern: ".*"
+          permissions:
+          - "Job/Cancel"
+          - "Job/Build"
+          - "Job/Delete"
+          - "Job/Create"
+          - "Job/Read"
+          - "Job/Configure"
+          - "Job/Workspace"
+  clouds:
+  - kubernetes:
+      containerCap: 10
+      containerCapStr: "10"
+      jenkinsTunnel: "jenkins-agent.jenkins.svc.cluster.local:50000"
+      jenkinsUrl: "http://jenkins.jenkins.svc.cluster.local:8080"
+      name: "kubernetes"
+      namespace: "jenkins"
+      podLabels:
+      - key: "jenkins/jenkins-jenkins-agent"
+        value: "true"
+      serverUrl: "https://kubernetes.default"
+      templates:
+      - containers:
+        - args: "^${computer.jnlpmac} ^${computer.name}"
+          envVars:
+          - envVar:
+              key: "JENKINS_URL"
+              value: "http://jenkins.jenkins.svc.cluster.local:8080/"
+          image: "jenkins/inbound-agent:3248.v65ecb_254c298-1"
+          name: "jnlp"
+          resourceLimitCpu: "512m"
+          resourceLimitMemory: "512Mi"
+          resourceRequestCpu: "512m"
+          resourceRequestMemory: "512Mi"
+          workingDir: "/home/jenkins/agent"
+        id: "97c344f56f1b83f2a51b0b5265b8cfa4d8badad794d92d1241d529d92ca2f40a"
+        label: "jenkins-jenkins-agent jenkins-agent"
+        name: "default"
+        namespace: "jenkins"
+        nodeUsageMode: "NORMAL"
+        podRetention: "never"
+        serviceAccount: "jenkins"
+        slaveConnectTimeout: 100
+        slaveConnectTimeoutStr: "100"
+        yaml: |-
+          apiVersion: v1
+          kind: Pod
+          spec:
+            containers:
+              - name: jnlp
+                env:
+                  - name: DOCKER_HOST
+                    value: tcp://localhost:2375
+                  - name: DOCKER_BUILDKIT
+                    value: 0
+              - name: dind-daemon
+                image: docker:dind
+                command: ["dockerd", "--host", "tcp://127.0.0.1:2375", "--insecure-registry", "nexus-service-nonprod.nexus-nonprod.svc:8082", "--insecure-registry", "nexus-service-prod.nexus-prod.svc:8082", "--insecure-registry", "repo-nexus-nonprod.tiddaw.net", "--insecure-registry", "repo-nexus.tiddaw.net"]
+                securityContext:
+                  privileged: true
+                resources:
+                  requests:
+                    cpu: 0.5
+                    memory: 1Gi
+                  limits:
+                    cpu: 1
+                    memory: 2Gi
+            tolerations:
+            - key: "service-tools"
+              operator: "Equal"
+              value: "true"
+              effect: "NoSchedule"
+        yamlMergeStrategy: "override"
+        yamls:
+        - |-
+          apiVersion: v1
+          kind: Pod
+          spec:
+            containers:
+              - name: jnlp
+                env:
+                  - name: DOCKER_HOST
+                    value: tcp://localhost:2375
+                  - name: DOCKER_BUILDKIT
+                    value: 0
+              - name: dind-daemon
+                image: docker:dind
+                command: ["dockerd", "--host", "tcp://127.0.0.1:2375", "--insecure-registry", "nexus-service-nonprod.nexus-nonprod.svc:8082", "--insecure-registry", "nexus-service-prod.nexus-prod.svc:8082", "--insecure-registry", "repo-nexus-nonprod.tiddaw.net", "--insecure-registry", "repo-nexus.tiddaw.net"]
+                securityContext:
+                  privileged: true
+                resources:
+                  requests:
+                    cpu: 0.5
+                    memory: 1Gi
+                  limits:
+                    cpu: 1
+                    memory: 2Gi
+            tolerations:
+            - key: "service-tools"
+              operator: "Equal"
+              value: "true"
+              effect: "NoSchedule"
+  crumbIssuer:
+    standard:
+      excludeClientIPFromCrumb: true
+  disableRememberMe: false
+  disabledAdministrativeMonitors:
+  - "hudson.util.DoubleLaunchChecker"
+  labelAtoms:
+  - name: "built-in"
+  - name: "jenkins-agent"
+  - name: "jenkins-jenkins-agent"
+  markupFormatter: "plainText"
+  mode: NORMAL
+  myViewsTabBar: "standard"
+  nodeMonitors:
+  - "architecture"
+  - "clock"
+  - diskSpace:
+      freeSpaceThreshold: "1GiB"
+      freeSpaceWarningThreshold: "2GiB"
+  - "swapSpace"
+  - tmpSpace:
+      freeSpaceThreshold: "1GiB"
+      freeSpaceWarningThreshold: "2GiB"
+  - "responseTime"
+  numExecutors: 0
+  primaryView:
+    all:
+      name: "all"
+  projectNamingStrategy: "authorizationStrategy"
+  quietPeriod: 5
+  remotingSecurity:
+    enabled: true
+  scmCheckoutRetryCount: 0
+  securityRealm:
+    local:
+      allowsSignup: false
+      enableCaptcha: false
+      users:
+      - id: "admin"
+        name: "Jenkins Admin"
+        properties:
+        - "apiToken"
+        - "consoleUrlProvider"
+        - "mailer"
+        - "myView"
+        - preferredProvider:
+            providerId: "default"
+        - "timezone"
+        - "experimentalFlags"
+      - id: "devops"
+        name: "devops"
+        properties:
+        - "apiToken"
+        - "consoleUrlProvider"
+        - "myView"
+        - preferredProvider:
+            providerId: "default"
+        - "timezone"
+        - "experimentalFlags"
+        - mailer:
+            emailAddress: "devops_talaadthai@hotmail.com"
+  slaveAgentPort: 50000
+  updateCenter:
+    sites:
+    - id: "default"
+      url: "https://updates.jenkins.io/update-center.json"
+  views:
+  - all:
+      name: "all"
+  viewsTabBar: "standard"
+globalCredentialsConfiguration:
+  configuration:
+    providerFilter: "none"
+    typeFilter: "none"
+appearance:
+  prism:
+    theme: PRISM
+security:
+  apiToken:
+    creationOfLegacyTokenEnabled: false
+    tokenGenerationOnCreationEnabled: false
+    usageStatisticsEnabled: true
+  gitHooks:
+    allowedOnAgents: false
+    allowedOnController: false
+  gitHostKeyVerificationConfiguration:
+    sshHostKeyVerificationStrategy: "knownHostsFileVerificationStrategy"
+unclassified:
+  buildDiscarders:
+    configuredBuildDiscarders:
+    - "jobBuildDiscarder"
+  fingerprints:
+    fingerprintCleanupDisabled: false
+    storage: "file"
+  location:
+    adminAddress: "address not configured yet <nobody@nowhere>"
+    url: "https://jenkins-nonprod.heydaddy.solutions/"
+  mailer:
+    charset: "UTF-8"
+    useSsl: false
+    useTls: false
+  pollSCM:
+    pollingThreadCount: 10
+  scmGit:
+    addGitTagAction: false
+    allowSecondFetch: false
+    createAccountBasedOnEmail: false
+    disableGitToolChooser: false
+    hideCredentials: false
+    showEntireCommitSummaryInChanges: false
+    useExistingAccountWithSameEmail: false
+tool:
+  git:
+    installations:
+    - home: "git"
+      name: "Default"
+  mavenGlobalConfig:
+    globalSettingsProvider: "standard"
+    settingsProvider: "standard"
